@@ -13,21 +13,52 @@ h       = W/Nx;     % grid spacing based on image width and target grid size
 n_units = 9;        % number of rock units contained in image
 [units,D,Nz] = ModelFromImage('section.tiff',n_units,W,Nx);
 
+% calculate sediment parameters
+% set variables (values found online)
+rho_particle = 2650; % density of sand, gravel & silt
+rho_air  = 1.225;    % density of air
+sa_phi   = 0.253;    % sand porosity fraction
+gr_phi   = 0.325;    % gravel porosity fraction
+si_phi   = 0.17;     % silt porosity fraction
+
+sa_particle_kT = 8;      % sand particle thermal conductivity 
+gr_particle_kT = 5;      % gravel particle thermal conductivity
+si_particle_kT = 3.5;    % silt particle thermal conductivity
+air_kT         = 0.025;  % air thermal conductivity
+
+% calculate bulk density 
+rho_sand   = sa_phi * rho_air + (1-sa_phi) * rho_particle;
+rho_gravel = gr_phi * rho_air + (1-gr_phi) * rho_particle;
+rho_silt   = si_phi * rho_air + (1-si_phi) * rho_particle;
+
+% calculate effective thermal conductivity. Idk how to make this non
+% negative
+sa_kT = -sa_particle_kT * (air_kT + (1 - sa_phi) * (sa_particle_kT - air_kT))/...
+                         (air_kT + (1 - sa_phi) * (air_kT - sa_particle_kT));
+gr_kT = -gr_particle_kT * (air_kT + (1 - gr_phi) * (gr_particle_kT - air_kT))/...
+                         (air_kT + (1 - sa_phi) * (air_kT - sa_particle_kT));
+si_kT = -si_particle_kT * (air_kT + (1 - si_phi) * (si_particle_kT - air_kT))/...
+                         (air_kT + (1 - sa_phi) * (air_kT - sa_particle_kT));
+%************************************************************************
+% chat gpt kT: sa_kT = 0.25, gr_kT = 0.475, si_kT = 0.2
+
+% RHP_wet = RHP_dry * (1-porosity)
+
+% material properties for each rock unit (update based on your calibration)
+matprop = [
+% unit  conductivity (kT)   density (rho)   heat capacity (Cp)   heat production (Hr)
+   1	     3.678            2697.6	          845	                4.172    %HE1
+   2	     1	              2000	              1000	                1        %Bg
+   3	     sa_kT            rho_sand            830	                1        %sand 1
+   4	     3.218            2703.5	          845	                5.575    %HE2
+   5	     gr_kT            rho_gravel          1000	                0.6      %gravel
+   6	     1	              2000	              1381	                2.75     %clay
+   7	     si_kT            rho_silt            1000	                1.4      %silt
+   8	     1	              2000	              2512	                3.5      %Ms (mud, silt, sand) Wet mud
+   9	     1e-6             1000	              1000	                0];      % air/water
+
 % material properties for each rock unit (update based on your calibration)
 
-
-matprop = [
-% unit conductivity(kT) density(rho)  heat capacity(Cp)  heat production(Hr)
-   1	      3.678       2697.6             1000	          4.172         %HE1
-   2	      1	          2000	             1000	          1             %Gneiss
-   3	      1	          2000	             1000	          1             %Sand
-   4	      3.218       2703.5             1000	          5.575         %HE2
-   5	      1	          2000	             1000	          1             %Gravel
-   6	      1	          2000	             1000	          1             %Clay
-   7	      1	          2000	             1000	          1             %Silt
-   8	      1	          2000	             1000	          1             %Mud
-   9	      1e-6        1000	             1000	          0];           % air/water
-         
 % get coefficient fields based on spatial distribution of rock units from image
 % pay attention if any unit conversion is required!
 rho    = reshape(matprop(units,3),Nz,Nx);
