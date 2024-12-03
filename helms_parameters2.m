@@ -3,6 +3,7 @@
 % clear workspace
 clear all; close all; %clc;
 
+
 % load model setup from image, interpolate to target grid size
 W       = 16e3;     % domain width (must correspond to width of image) [m]
 Nx      = 200;      % target grid size z-direction
@@ -31,11 +32,10 @@ Cp     = reshape(matprop(units,4),Nz,Nx);
 kT     = reshape(matprop(units,2),Nz,Nx);
 Hr     = reshape(matprop(units,5),Nz,Nx);
 
+%Test in constant coefficient unit value case (repeat for other variables)
+%rho = 2400*ones(Nz,Nx);
+
 % continue setting remaining model parameters, then call model routine
-
-
-%*****  RUN MODEL
-run('./ModelFromImage.m');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -49,6 +49,7 @@ kT0   = 1e-7;         % heat diffusivity [m2/s]
 cT    = 1e-9;         % kT T-dependence prefactor
 mT    = 2;            % kT T-dependence powerlaw
 g0    = 9.8;           % gravity [m/s2]
+aT    = 1e-4;         % thermal expansivity [1/C]
 
 ADVN  = 'WENO5';      % advection scheme ('UPW1', 'CFD2', 'UPW3', 'WENO5')
 
@@ -60,5 +61,6 @@ alpha = 0.99;         % iterative step size limiter
 beta  = 0.95;         % iterative lag parameter
 tol   = 1e-8;         % residual tolerance
 nup   = 100;          % update T, check residual every nup iterations
+dTdto = 0 
 
-run('./untitled3.m');
+run('./helmsdale_take_2.m');
