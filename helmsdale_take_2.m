@@ -54,9 +54,11 @@ makefig(xc,zc,T,0,yr)
 %*****  Solve Model Equations
 
 dt = CFL * min((h/2),(h/2)^2/max(kT(:))); % initial time step [s]
-t  = 0;  % initial time [s]
-k  = 0;  % initial time step count
-dTdt = 0
+% Initialization before loop
+t = 0;      % initial time
+k = 0;      % step counter
+dTdt = zeros(size(T)); % initialise temperature gradient
+dTdto = dTdt; % store initial rate of change 
 
 % loop through time steps until stopping time reached
 while t <= tend
@@ -69,8 +71,8 @@ while t <= tend
     fprintf(1,'\n\n*****  step = %d;  dt = %1.3e;  time = %1.3e \n\n',k,dt,t)
 
     % store old temperature and rate
-    dTdto = dTdt;
-    To    = T;
+    dTdto = dTdt; %stores the temperature rate of change dTdt from the previous time step.
+    To    = T; %Stores the temperature T from the previous time step.
 
     % get time step step size
     dt    = CFL * min((h/2),(h/2)^2/max(kT(:))); % time step [s]
@@ -83,15 +85,14 @@ while t <= tend
 
         % update temperature every 'nup' iterations
         if ~mod(it,nup) && k>=1
-            ssssss = 31546432
-            disp(ssssss)
             % get T-dependent segregation mobility
             kT  = kT0 + cT.*max(0,T).^mT;
 
             % get rate of change
             dTdt = diffusion(T,kT,h,ix3,iz3);
 
-            % get temperature residual
+            % get temperature residual. This is where the finite difference
+            % is happening: T-T0 (new temp - old temp)
             res_T = (T - To)/dt - (dTdt + dTdto)/2;
 
             % set isothermal boundaries on top/bot
@@ -144,17 +145,18 @@ subplot(2,2,1);
 imagesc(x,z,T); axis equal tight; colorbar; hold on
 contour(x,z,T,[100,150,200],'k');
 
-ylabel('z [m]','FontSize',15)
+ylabel('Depth [m]','FontSize',15)
 title('Temperature [C]','FontSize',17)
 
 end
 
 % Function to calculate diffusion rate
-function [dTdt] = diffusion(f,k,h,ix,iz)
+function [dTdt] = diffusion(f,kT,h,ix,iz)
 % calculate heat flux by diffusion
 
-qx = - k .* diff(f(:,ix), 1, 2)/h;
-qz = - k .* diff(f(iz, :), 1, 1)/h;
+
+qx = -kT .* diff(f(:,ix), 1, 2)/h;
+qz = -kT .* diff(f(iz, :), 1, 1)/h;
 
 % calculate flux balance for rate of change
 dTdt = - (diff(qx)/h+diff(qz)/h);
