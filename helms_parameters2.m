@@ -27,10 +27,10 @@ matprop = [
          
 % get coefficient fields based on spatial distribution of rock units from image
 % pay attention if any unit conversion is required!
-rho    = reshape(matprop(units,3),Nz,Nx);
-Cp     = reshape(matprop(units,4),Nz,Nx);
-kT     = reshape(matprop(units,2),Nz,Nx);
-Hr     = reshape(matprop(units,5),Nz,Nx);
+rho    = reshape(matprop(units,3),Nz,Nx); %density
+Cp     = reshape(matprop(units,4),Nz,Nx); %heat capacity
+kT     = reshape(matprop(units,2),Nz,Nx); %heat conductivity
+Hr     = reshape(matprop(units,5),Nz,Nx); %radiogenic heating rate
 
 %Test in constant coefficient unit value case (repeat for other variables)
 %rho = 2400*ones(Nz,Nx);
@@ -39,13 +39,13 @@ Hr     = reshape(matprop(units,5),Nz,Nx);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-TGrad = 35            %Reference Temperature Gradient from National Survey
+TGrad = 35;            %Reference Temperature Gradient from National Survey
 Ttop  = 5;            % surface temperature
 Tbot  = Ttop + TGrad*(D/1000);           %Temperature at the bottom of the domain using reference gradient
 
 
 rho0  = 1000;         % reference density [kg/m3]
-kT0   = 1e-7;         % heat diffusivity [m2/s]
+kT0   = 1e-7;         % reference heat diffusivity [m2/s]
 cT    = 1e-9;         % kT T-dependence prefactor
 mT    = 2;            % kT T-dependence powerlaw
 g0    = 9.8;           % gravity [m/s2]
@@ -61,6 +61,6 @@ alpha = 0.99;         % iterative step size limiter
 beta  = 0.95;         % iterative lag parameter
 tol   = 1e-8;         % residual tolerance
 nup   = 100;          % update T, check residual every nup iterations
-dTdto = 0 
+
 
 run('./helmsdale_take_2.m');
